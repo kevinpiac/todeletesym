@@ -25,7 +25,7 @@ io.on('connection', function(socket){
   io.emit('log', `VM --> USER CONNECTION HANDSHAKE <--`);
 });
 
-http.listen(8080, function(){
-  console.log('listening on *:8080');
+http.listen(80, function(){
+  console.log('listening on *:80');
   io.emit('log', `VIRTUAL MACHINE --> STARTED SERVER !!`);
 });
