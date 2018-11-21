@@ -1,24 +1,25 @@
 const lib = require('./lib');
 
-const forEachJobAsync = async (jobs, i, io) => {
+const forEachJobAsync = async (jobs, i, io, config, prevResults) => {
   if (i >= jobs.length) {
     return Promise.resolve('ALL DONE');
   }
   const job = jobs[i];
-  io.emit('log', `--> JOB ${job.id} <--`);
+  io.emit('log', `[${job.id}] Starting Job`);
 
+  const inputData = { ...config, results: { ...prevResults } };
   const vm = lib.newVM(io);
-  await lib.runAsModule(vm, 'console.log(`INPUT IS: ${inputData.inputObject}`)', { inputObject: true });
-
-  io.emit('log', `<-- JOB ${job.id}`);
-  return forEachJobAsync(jobs, i + 1, io);
+  const res = await lib.runAsModule(vm, job.sourceCode, inputData);
+  const mergeRes = { ...prevResults, [job.id]: res };
+  io.emit('log', `[${job.id}] Done ! Result: [${res}]`);
+  return forEachJobAsync(jobs, i + 1, io, config, mergeRes);
 };
 
 const execute = async (pipeline, io) => {
-  const { jobs } = pipeline;
+  const { jobs, config } = pipeline;
 
-  await forEachJobAsync(jobs, 0, io);
-  return Promise.resolve('ALL DONE');
+  await forEachJobAsync(jobs, 0, io, config, {});
+  return Promise.resolve('ALL JOBS FINISHED');
 };
 
 module.exports = {
